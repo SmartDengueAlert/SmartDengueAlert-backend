@@ -1,4 +1,5 @@
-# Dengue Prediction App
+# SmartDengueAlert-backend
+Node.js and Express.js backend
 
 ## Setup
 
