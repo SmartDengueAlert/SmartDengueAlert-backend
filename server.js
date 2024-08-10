@@ -61,3 +61,47 @@
 // app.listen(port, () => {
 //     console.log(`Server is running on port ${port}`);
 // });
+//end of dilshana's code
+
+
+const express = require('express');
+const bodyParser = require('body-parser');
+const mysql = require('mysql2');
+const predictionRoutes = require('./routes/predictionRoutes'); // Import the prediction routes
+const dengueRoutes = require('./routes/dengueRoutes');
+const weatherRoutes = require('./routes/weatherRoutes');
+const authRoutes = require('./routes/authRoutes');
+
+
+const app = express();
+const port = 3001; // Changed from 3000 to 3001
+
+// Create MySQL connection
+const db = mysql.createConnection({
+    host: 'localhost',
+    user: 'root',
+    password: '1234',
+    database: 'dengue_project_db'
+});
+
+// Connect to MySQL
+db.connect((err) => {
+    if (err) {
+        console.error('Error connecting to MySQL database:', err.message);
+        process.exit(1);
+    }
+    console.log('Connected to MySQL database');
+});
+
+// Middleware
+app.use(bodyParser.json());
+
+// Use the  routes
+app.use('/prediction', predictionRoutes);
+app.use('/dengue', dengueRoutes);
+app.use('/weather', weatherRoutes);
+app.use('/auth', authRoutes);
+
+app.listen(port, () => {
+    console.log(`Server is running on port ${port}`);
+});
