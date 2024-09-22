@@ -6,6 +6,7 @@ const config = require('../config.js');
 async function login(req, res) {
     const { email, password } = req.body;
 
+    console.log('email, password:', email, password);
     // Simple email format validation
     const emailRegex = /\S+@\S+\.\S+/;
     if (!emailRegex.test(email)) {
@@ -49,7 +50,7 @@ async function login(req, res) {
         }
 
         // Generate JWT token without expiry
-        const token = jwt.sign({ userId: user._id }, config.secret);
+        const token = jwt.sign({ userId: user._id }, config.jwtSecret);
 
         // Return success response with token
         res.status(200).json({ token });

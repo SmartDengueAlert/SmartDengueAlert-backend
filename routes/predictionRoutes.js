@@ -4,6 +4,6 @@ const { verifyToken } = require('../middleware/authMiddleware.js');
 
 const router = express.Router();
 
-router.post('/getPrediction', verifyToken, getPrediction);
+router.post('/getPrediction', getPrediction);
 
 module.exports = router;

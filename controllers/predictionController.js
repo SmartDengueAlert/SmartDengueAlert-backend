@@ -1,32 +1,59 @@
-const predictionService = require('../services/predictionService');
-const weatherService = require('../services/weatherService');
+const { fetchWeatherData } = require('../services/weatherService');
+const { fetchDengueData } = require('../services/dengueService');
+const { preprocessWeatherNDengueData } = require('../services/wNdpreproService');
+const { getPredictionFromFlask } = require('../services/predictionService');
 
+/*// Middleware for verifying JWT token
+const verifyToken = (req, res, next) => {
+    const token = req.headers['authorization'];
+
+    if (!token) {
+        return res.status(403).json({ error: 'No token provided' });
+    }
+
+    jwt.verify(token, config.jwtSecret, (err, decoded) => {
+        if (err) {
+            return res.status(401).json({ error: 'Unauthorized: Invalid token' });
+        }
+        req.userId = decoded.userId;
+        next();
+    });
+};*/
+//received the calling from predictionRoutes.js to call getPrediction function
 const getPrediction = async (req, res) => {
-    const { location, userId } = req.body;
+    const location = req.query.location;
 
+    //Checking the Location if it is valid or not
+    if (!location) {
+        return res.status(400).json({ error: 'prediction_controller.js : Location is required' });
+    }
     try {
-        // Fetch current weather data
-        const weatherData = await weatherService.fetchWeatherData(location);
+        //calling for fetchWeatherData function in weatherService.js and get the 'weatherData' from weatherService.js
+        const weatherData = await fetchWeatherData(location);
+        console.log('preContrl:',location);
+        //calling for fetchDengueData function in dengueService.js and get the 'dengueData' from dengueService.js
+        const dengueData = await fetchDengueData(location);
 
-        // Get prediction from the ML model
-        const predictionResult = await predictionService.getPrediction(weatherData);
+        console.log('Dengue Data:', dengueData);
+        //calling for preprocessWeatherNDengueData function in wNdpreproService.js and get the 'features' from wNdpreproService.js
+        const features = await preprocessWeatherNDengueData(weatherData, dengueData);
 
-        // Create a new prediction record
-        const prediction = new Prediction({
-            user_id: userId,
-            risk_level: predictionResult.risk_level
-        });
+        // Get prediction from Flask server
+        const prediction = await getPredictionFromFlask(features);
 
-        // Save the prediction to the database
-        await prediction.save();
+        //send the json type prediction to postman
+        res.json({ prediction });
 
-        // Return the prediction
-        res.status(200).send({ prediction });
+        //Print the prediction which got from the model using flask server
+        console.log('Dengue Prediction from Flask server:', prediction);
+
+        //Error Handling
     } catch (error) {
-        res.status(500).send({ message: error.message });
+        console.error('prediction_controller.js : Failed to predict dengue warning:', error.message);
+        res.status(500).json({ error: 'prediction_controller.js : Failed to predict dengue warning' });
     }
 };
-
+//Exporting getPrediction
 module.exports = {
     getPrediction
 };
